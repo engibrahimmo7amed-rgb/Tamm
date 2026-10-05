@@ -707,7 +707,10 @@ html[data-theme="dark"] .theme-toggle .sun-icon{display:block}
       <div id="buyerVerificationWrap" class="hidden"><label for="buyerVerificationType">التحقق بواسطة</label><select id="buyerVerificationType" onchange="toggleBuyerVerification()"><option value="iqama">رقم الإقامة</option><option value="license">رخصة السير</option></select></div>
     </div>
     <div id="buyerIqamaWrap" class="hidden"><label for="buyerIqama">رقم الإقامة</label><input id="buyerIqama" type="text" style="max-width:380px" autocomplete="off"></div>
-    <div id="buyerLicenseWrap" class="hidden"><label for="buyerLicense">رقم رخصة السير</label><input id="buyerLicense" type="text" style="max-width:380px" autocomplete="off"></div>
+    <div id="buyerLicenseWrap" class="hidden"><label for="buyerLicenseLetter1">رقم رخصة السير</label><div class="plate-box buyer-license-box">
+      <input id="buyerLicenseLetter1" class="plate-letter" maxlength="1" oninput="moveNext(this)" autocomplete="off"><input class="plate-letter" maxlength="1" oninput="moveNext(this)" autocomplete="off"><input class="plate-letter" maxlength="1" oninput="moveNext(this)" autocomplete="off">
+      <input class="plate-number" maxlength="1" oninput="moveNext(this)" autocomplete="off"><input class="plate-number" maxlength="1" oninput="moveNext(this)" autocomplete="off"><input class="plate-number" maxlength="1" oninput="moveNext(this)" autocomplete="off"><input class="plate-number" maxlength="1" oninput="moveNext(this)" autocomplete="off">
+    </div></div>
   </div>
   <div class="section"><div class="section-title">المستخدم الفعلي</div>
     <label><input id="actualUser" type="checkbox" style="width:auto"> هل ترغب في إضافة مستخدم فعلي للمركبة؟</label>
@@ -1263,7 +1266,7 @@ function validateFirstStep(){
   }else if(document.getElementById('buyerVerificationType').value==='iqama'){
     addRequiredField(document.getElementById('buyerIqama'),'أدخل رقم إقامة المشتري.');
   }else{
-    addRequiredField(document.getElementById('buyerLicense'),'أدخل رقم رخصة سير المشتري.');
+    page.querySelectorAll('.buyer-license-box input').forEach(input=>addRequiredField(input,'أكمل إدخال رقم رخصة سير المشتري.'));
   }
   const missing=requiredFields.find(({field})=>!field.value.trim());
   if(!missing) return true;
@@ -1348,10 +1351,12 @@ function getFieldLabel(element){
   return element.id||'بيان إضافي';
 }
 function captureTransaction(){
-  const plate=[...document.querySelectorAll('#page1 .plate-box input')].map(input=>input.value).join('');
+  const plate=[...document.querySelectorAll('#page1 .plate-box:not(.buyer-license-box) input')].map(input=>input.value).join('');
+  const buyerLicense=[...document.querySelectorAll('.buyer-license-box input')].map(input=>input.value).join('');
   const sellerType=document.getElementById('sellerType').value;
   const buyerType=document.getElementById('buyerType').value;
   const fields=[{label:'نوع تسجيل اللوحة',value:document.getElementById('plateType').value},{label:'رقم اللوحة',value:plate||'غير مدخل'},{label:'نوع البائع',value:sellerType==='company'?'شركة':'فرد'},{label:'نوع المشتري',value:buyerType==='company'?'شركة':'فرد'}];
+  if(buyerType==='company'&&document.getElementById('buyerVerificationType').value==='license'&&buyerLicense) fields.push({label:'رقم رخصة السير',value:buyerLicense});
   document.querySelectorAll('#page1 input:not(.plate-box input),#page1 select,#page1 textarea,#page2 input:not([type="file"]),#page2 select,#page2 textarea,#page3 input,#page3 select,#page3 textarea,#page4 input:not([type="file"]),#page4 select,#page4 textarea').forEach(element=>{
     const value=element.type==='checkbox'?(element.checked?'نعم':'لا'):element.value;
     if(value&&value!=='لا') fields.push({label:getFieldLabel(element),value});
@@ -1817,7 +1822,7 @@ function toggleBuyer(){
   document.getElementById('buyerVerificationWrap').classList.toggle('hidden',!isCompany);
   if(!isCompany){
     document.getElementById('buyerIqama').value='';
-    document.getElementById('buyerLicense').value='';
+    document.querySelectorAll('.buyer-license-box input').forEach(input=>input.value='');
   }
   toggleBuyerVerification();
 }
@@ -1826,7 +1831,7 @@ function toggleBuyerVerification(){
   const method=document.getElementById('buyerVerificationType').value;
   document.getElementById('buyerIqamaWrap').classList.toggle('hidden',!isCompany||method!=='iqama');
   document.getElementById('buyerLicenseWrap').classList.toggle('hidden',!isCompany||method!=='license');
-  if(method==='iqama') document.getElementById('buyerLicense').value='';
+  if(method==='iqama') document.querySelectorAll('.buyer-license-box input').forEach(input=>input.value='');
   else document.getElementById('buyerIqama').value='';
 }
 toggleSeller();toggleBuyer();
